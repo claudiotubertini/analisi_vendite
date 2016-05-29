@@ -40,9 +40,10 @@ Questa è la tabelle delle vendite a enti finanziatori:
 kable(dtcontributi)
 kable(cbind("Totale fatturato Enti", sum(df_contributi$Valore_fatturato)), row.names = NA, col.names = NA)
 ```
-
-Questa è la rappresentazione grafica delle vendite complessive:
-
+# L'andamento generale  
+## Le vendite complessive
+Questa è la rappresentazione grafica delle vendite complessive:  
+  
 ```{r echo=FALSE}
 ggplot(data = df2,
 aes(Mese, Valore_fatturato)) +
@@ -50,8 +51,9 @@ stat_summary(fun.y = sum, geom = "bar") +
 labs(title = "Vendite complessive", y = "Fatturato")
 
 ```
-
-Questa è la rappresentazione grafica delle vendite finanziate da Enti o Dipartimenti ("vendite direzionali"):  
+## Le vendite direzionali  
+Questa è la rappresentazione grafica delle vendite finanziate da Enti o Dipartimenti:  
+  
 ```{r echo=FALSE}
 ggplot(data = df_contributi,
 aes(Mese, Valore_fatturato)) +
@@ -60,20 +62,40 @@ labs(title = "Vendite Direzionali", y = "Fatturato")
 
 ```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Il trend delle vendite attraverso la rete delle librerie  
+E' assodato dalle testimonianze di clienti che abbiamo raccolto in diverse occasioni, che la struttura della scelta di acquisto è la seguente:  
+* Il libro consigliato (praticamente mai adottato in maniera esclusiva) da un docente o un formatore viene cercato in una libreria, a volte, se non trovato, viene sostituito da un testo concorrente. Altre volte  
+* La ricerca prosegue sulle principali librerie online: IBS, Libreria Universitaria (Webster), Amazon. Se non trovato o non sostituito il lettore cerca sul  
+* Sito web CLUEB  
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Questa è la rappresentazione grafica dell'andamento delle vendite per settimana:  
+  
+```{r echo = FALSE}
+df_librerie$Settimana <- as.Date(cut(df_librerie$data, breaks = "week", start.on.monday = TRUE))
+df_librerie_by_week = group_by(df_librerie, Settimana)
+fatturato_settimanale_librerie = summarise(df_librerie_by_week, fatturato = sum(Valore_fatturato), count = n())
+ggplot(fatturato_settimanale_librerie, aes(Settimana, fatturato)) +
+  geom_point(aes(size = count), alpha = 1/2) +
+  geom_smooth() +
+  scale_size_area() +
+  labs(title = "Vendite per Settimana", y = "Fatturato")
 
-```{r cars}
-summary(cars)
 ```
+  
+Nota: La dimensione dei punti rappresenta il numero di fatture per settimana.  
 
-## Including Plots
+## La stima dell'andamento delle vendite nelle prossime settimane  
 
-You can also embed plots, for example:
+```{r echo = FALSE}
+myts <- ts(fatturato_settimanale_librerie$fatturato, frequency=4)
+myts_forecast = HoltWinters(myts, beta=FALSE, gamma=FALSE)
+myts_forecast4 = forecast.HoltWinters(myts_forecast, h=4)
+plot(myts_forecast4, main= "Previsione vendite", ylab="Fatturato settimanale", xlab="Mesi")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
+  
+L'andamento medio delle vendite in libreria nel prossimo mese è quindi stimabile in circa 3300 euro a settimana. Potrebbe essere il momento per aprire nuovi canali di vendita, in particolare verso Amazon. Se le ipotesi di comportamento dei nostri concumatori non dovessero essere confermate, l'aumento dello sconto dovrebbe causare un calo del fatturato. Se invece si riscontrerà un netto aumento avremo conferma della giustezza delle ipotesi di comportamento del consumatore medio. Le vendite ad Amazon possono essere attivate e disattivate in pochi giorni e senza limiti di tempo.
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+  
