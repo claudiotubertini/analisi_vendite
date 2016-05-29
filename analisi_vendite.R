@@ -26,6 +26,15 @@ ggplot(data = df_librerie,
        aes(Settimana, Valore_fatturato)) +
   stat_summary(fun.y = sum, geom = "bar")
 
+df2_per_mese = group_by(df2, Mese)
+fatturato_mensile = summarise(df2_per_mese, fatturato = sum(Valore_fatturato), count = n())
+ggplot(data = fatturato_mensile, aes(Mese, fatturato)) 
+
+ggplot(df2, aes(x=Mese, y=Valore_fatturato, fill=Contributo), color=Contributo) +  
+  stat_summary(fun.y=sum, position="stack", geom="bar") + 
+  labs(title = "Vendite complessive", y = "Fatturato")
+
+
 df_librerie_by_week = group_by(df_librerie, Settimana)
 fatturato_settimanale_librerie = summarise(df_librerie_by_week, fatturato = sum(Valore_fatturato), count = n())
 

@@ -4,8 +4,10 @@ params:
   snapshot: "2016-05-25"
   start: "2016-01-01"
 output: pdf_document
+documentclass: article
+classoption: a4paper
 ---
-## Le vendite CLUEB dal `r params$start` al `r params$snapshot`
+#Le vendite CLUEB dal `r params$start` al `r params$snapshot`
 
 ```{r echo=FALSE, message=FALSE}
 library(gdata)
@@ -25,7 +27,9 @@ df_contributi = filter(df2, df2$Contributo == "x")
 df_librerie$Settimana <- as.Date(cut(df_librerie$data, breaks = "week", start.on.monday = TRUE))
 
 ```
-I dati delle vendite provengono dal gestionale Clueb/Patron mediante un'esportazione manuale. Dopo opportune correzioni ecco la tabella integrale delle vendite alle librerie:    
+
+I dati delle vendite provengono dal gestionale Clueb/Patron mediante un'esportazione manuale. Dopo opportune correzioni ecco la tabella integrale delle vendite alle librerie:   
+
 ```{r kable, echo=FALSE}
 dtlibrerie <- select(df_librerie, cliente, data, Valore_fatturato)
 dtcontributi <- select(df_contributi, cliente, data, Valore_fatturato)
@@ -34,39 +38,49 @@ kable(dtlibrerie)
 kable(cbind("Totale fatturato Librerie", sum(df_librerie$Valore_fatturato)), row.names = NA, col.names = NA)
 ```
 
-Questa è la tabelle delle vendite a enti finanziatori:  
+Questa è la tabelle delle vendite a enti finanziatori.   
 
 ```{r echo=FALSE}
 kable(dtcontributi)
 kable(cbind("Totale fatturato Enti", sum(df_contributi$Valore_fatturato)), row.names = NA, col.names = NA)
 ```
-# L'andamento generale  
-## Le vendite complessive
-Questa è la rappresentazione grafica delle vendite complessive:  
+#1. L'andamento generale  
+##Le vendite complessive
+Questa è la rappresentazione grafica delle vendite complessive.  
   
 ```{r echo=FALSE}
-ggplot(data = df2,
-aes(Mese, Valore_fatturato)) +
+ggplot(data = df2, aes(Mese, Valore_fatturato)) +
 stat_summary(fun.y = sum, geom = "bar") + 
 labs(title = "Vendite complessive", y = "Fatturato")
 
+# ggplot() + 
+# stat_summary(data=df_librerie, aes(x=Mese, y=Valore_fatturato), fun.y = sum, geom = "bar", color='green') + 
+# stat_summary(data=df_contributi, aes(x=Mese, y=Valore_fatturato), fun.y = sum, geom = "bar", color='red') + 
+#   labs(title = "Vendite complessive", y = "Fatturato")
 ```
-## Le vendite direzionali  
+
+Suddivisa tra vendite in libreria e vendite direzionali:
+
+```{r echo = FALSE}
+ggplot(df2, aes(x=Mese, y=Valore_fatturato, fill=Contributo), color=Contributo) +  
+  stat_summary(fun.y=sum, position="stack", geom="bar") + 
+  labs(title = "Vendite complessive", y = "Fatturato")
+```
+
+Le vendite direzionali (con contributo) sono indicate nella parte superiore del grafico a barre.  
+
+##2. Le vendite direzionali  
 Questa è la rappresentazione grafica delle vendite finanziate da Enti o Dipartimenti:  
   
 ```{r echo=FALSE}
-ggplot(data = df_contributi,
-aes(Mese, Valore_fatturato)) +
+ggplot(data = df_contributi, aes(Mese, Valore_fatturato)) +
 stat_summary(fun.y = sum, geom = "bar") + 
 labs(title = "Vendite Direzionali", y = "Fatturato")
 
 ```
 
-# Il trend delle vendite attraverso la rete delle librerie  
-E' assodato dalle testimonianze di clienti che abbiamo raccolto in diverse occasioni, che la struttura della scelta di acquisto è la seguente:  
-* Il libro consigliato (praticamente mai adottato in maniera esclusiva) da un docente o un formatore viene cercato in una libreria, a volte, se non trovato, viene sostituito da un testo concorrente. Altre volte  
-* La ricerca prosegue sulle principali librerie online: IBS, Libreria Universitaria (Webster), Amazon. Se non trovato o non sostituito il lettore cerca sul  
-* Sito web CLUEB  
+#3. Il trend delle vendite attraverso la rete delle librerie  
+
 
 Questa è la rappresentazione grafica dell'andamento delle vendite per settimana:  
   
@@ -84,17 +98,35 @@ ggplot(fatturato_settimanale_librerie, aes(Settimana, fatturato)) +
   
 Nota: La dimensione dei punti rappresenta il numero di fatture per settimana.  
 
-## La stima dell'andamento delle vendite nelle prossime settimane  
+##4. La stima dell'andamento delle vendite nelle prossime settimane  
 
 ```{r echo = FALSE}
 myts <- ts(fatturato_settimanale_librerie$fatturato, frequency=4)
 myts_forecast = HoltWinters(myts, beta=FALSE, gamma=FALSE)
+plot(myts_forecast, main= "Andamento vendite", ylab="Fatturato settimanale", xlab="Mesi")
+```
+
+La stima dell'andamento medio è indicata dalla linea continua centrale.  
+Ecco le previsioni per le prossime settimane.  
+
+```{r echo=FALSE}
 myts_forecast4 = forecast.HoltWinters(myts_forecast, h=4)
 plot(myts_forecast4, main= "Previsione vendite", ylab="Fatturato settimanale", xlab="Mesi")
 
 ```
   
-L'andamento medio delle vendite in libreria nel prossimo mese è quindi stimabile in circa 3300 euro a settimana. Potrebbe essere il momento per aprire nuovi canali di vendita, in particolare verso Amazon. Se le ipotesi di comportamento dei nostri concumatori non dovessero essere confermate, l'aumento dello sconto dovrebbe causare un calo del fatturato. Se invece si riscontrerà un netto aumento avremo conferma della giustezza delle ipotesi di comportamento del consumatore medio. Le vendite ad Amazon possono essere attivate e disattivate in pochi giorni e senza limiti di tempo.
+L'andamento medio delle vendite in libreria nel prossimo mese è quindi stimabile in circa 3300 euro a settimana. 
+
+#5. Conclusioni
+
+E' assodato dalle testimonianze di clienti che abbiamo raccolto in diverse occasioni, che la struttura della scelta di acquisto è la seguente:  
+* Il libro consigliato (praticamente mai adottato in maniera esclusiva) da un docente o un formatore viene cercato in una libreria, a volte, se non trovato, viene sostituito da un testo concorrente. Altre volte  
+* La ricerca prosegue sulle principali librerie online: IBS, Libreria Universitaria (Webster), Amazon. Se non trovato o non sostituito il lettore cerca sul  
+* Sito web CLUEB  
+Pensiamo sia il momento per aprire nuovi canali di vendita, in particolare verso Amazon. sulla base delle analisi precedenti abbiamo determinato una stima media del fatturato settimanale che ci servirà come punto di riferimento per misurare l'impatto delle vendite di Amazon.  
+Se le ipotesi di comportamento dei nostri consumatori non dovessero essere confermate, l'aumento dello sconto richiesto da Amazon dovrebbe causare un calo del fatturato. Se invece si riscontrerà un aumento avremo conferma della giustezza delle ipotesi di comportamento del consumatore medio. Le vendite ad Amazon possono essere attivate e disattivate in pochi giorni e senza limiti di tempo.
+
+
 
 
 
