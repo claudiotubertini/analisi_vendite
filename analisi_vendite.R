@@ -4,6 +4,7 @@ library(ggplot2)
 library(tidyr)
 library(dplyr)
 library(forecast)
+library(xtable)
 
 df = read.xls ("fatture_20160525.xls", sheet = 1, header = TRUE)
 df2 = separate(data = df, col = Cliente_forn, into = c("cliente", "codice"), sep = "\\-")

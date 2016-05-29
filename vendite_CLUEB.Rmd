@@ -1,0 +1,79 @@
+---
+title: "Vendite CLUEB"
+params:
+  snapshot: "2016-05-25"
+  start: "2016-01-01"
+output: pdf_document
+---
+## Le vendite CLUEB dal `r params$start` al `r params$snapshot`
+
+```{r echo=FALSE, message=FALSE}
+library(gdata)
+library(scales)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(forecast)
+library(xtable)
+df = read.xls ("fatture_20160525.xls", sheet = 1, header = TRUE)
+df2 = separate(data = df, col = Cliente_forn, into = c("cliente", "codice"), sep = "\\-")
+df2$data = paste("2016", df2$Mese, df2$Giorno, sep = "/")
+df2$data <- as.Date(df2$data, "%Y/%m/%d")
+df2 <- arrange(df2, Mese, Giorno)
+df_librerie = filter(df2, df2$Contributo == "")
+df_contributi = filter(df2, df2$Contributo == "x")
+df_librerie$Settimana <- as.Date(cut(df_librerie$data, breaks = "week", start.on.monday = TRUE))
+
+```
+I dati delle vendite provengono dal gestionale Clueb/Patron mediante un'esportazione manuale. Dopo opportune correzioni ecco la tabella integrale delle vendite alle librerie:    
+```{r kable, echo=FALSE}
+dtlibrerie <- select(df_librerie, cliente, data, Valore_fatturato)
+dtcontributi <- select(df_contributi, cliente, data, Valore_fatturato)
+library(knitr)
+kable(dtlibrerie)
+kable(cbind("Totale fatturato Librerie", sum(df_librerie$Valore_fatturato)), row.names = NA, col.names = NA)
+```
+
+Questa è la tabelle delle vendite a enti finanziatori:  
+
+```{r echo=FALSE}
+kable(dtcontributi)
+kable(cbind("Totale fatturato Enti", sum(df_contributi$Valore_fatturato)), row.names = NA, col.names = NA)
+```
+
+Questa è la rappresentazione grafica delle vendite complessive:
+
+```{r echo=FALSE}
+ggplot(data = df2,
+aes(Mese, Valore_fatturato)) +
+stat_summary(fun.y = sum, geom = "bar") + 
+labs(title = "Vendite complessive", y = "Fatturato")
+
+```
+
+Questa è la rappresentazione grafica delle vendite finanziate da Enti o Dipartimenti ("vendite direzionali"):  
+```{r echo=FALSE}
+ggplot(data = df_contributi,
+aes(Mese, Valore_fatturato)) +
+stat_summary(fun.y = sum, geom = "bar") + 
+labs(title = "Vendite Direzionali", y = "Fatturato")
+
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
