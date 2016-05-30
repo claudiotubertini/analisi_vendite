@@ -17,6 +17,7 @@ library(tidyr)
 library(dplyr)
 library(forecast)
 library(xtable)
+library(knitr)
 df = read.xls ("fatture_20160525.xls", sheet = 1, header = TRUE)
 df2 = separate(data = df, col = Cliente_forn, into = c("cliente", "codice"), sep = "\\-")
 df2$data = paste("2016", df2$Mese, df2$Giorno, sep = "/")
@@ -28,20 +29,20 @@ df_librerie$Settimana <- as.Date(cut(df_librerie$data, breaks = "week", start.on
 
 ```
 
-I dati delle vendite provengono dal gestionale Clueb/Patron mediante un'esportazione manuale. Dopo opportune correzioni ecco la tabella integrale delle vendite alle librerie:   
+I dati delle vendite provengono dal gestionale Clueb/Patron mediante un'esportazione manuale. Questi sono i totali del periodo preso in considerazione. Il totale delle vendite alle librerie: 
 
 ```{r kable, echo=FALSE}
 dtlibrerie <- select(df_librerie, cliente, data, Valore_fatturato)
 dtcontributi <- select(df_contributi, cliente, data, Valore_fatturato)
-library(knitr)
-kable(dtlibrerie)
+# library(knitr)
+# kable(dtlibrerie)
 kable(cbind("Totale fatturato Librerie", sum(df_librerie$Valore_fatturato)), row.names = NA, col.names = NA)
 ```
 
-Questa è la tabelle delle vendite a enti finanziatori.   
+Questo è il totale del fatturato a enti e dipartimenti.   
 
 ```{r echo=FALSE}
-kable(dtcontributi)
+# kable(dtcontributi)
 kable(cbind("Totale fatturato Enti", sum(df_contributi$Valore_fatturato)), row.names = NA, col.names = NA)
 ```
 #1. L'andamento generale  
@@ -59,7 +60,10 @@ labs(title = "Vendite complessive", y = "Fatturato")
 #   labs(title = "Vendite complessive", y = "Fatturato")
 ```
 
-Suddivisa tra vendite in libreria e vendite direzionali:
+  
+  
+  
+La suddivisione  tra vendite in libreria e vendite direzionali può essere meglio percepita con questo grafico:
 
 ```{r echo = FALSE}
 ggplot(df2, aes(x=Mese, y=Valore_fatturato, fill=Contributo), color=Contributo) +  
@@ -68,7 +72,11 @@ ggplot(df2, aes(x=Mese, y=Valore_fatturato, fill=Contributo), color=Contributo) 
 ```
 
 Le vendite direzionali (con contributo) sono indicate nella parte superiore del grafico a barre.  
-
+  
+    
+      
+        
+        
 ##2. Le vendite direzionali  
 Questa è la rappresentazione grafica delle vendite finanziate da Enti o Dipartimenti:  
   
@@ -82,7 +90,7 @@ labs(title = "Vendite Direzionali", y = "Fatturato")
 #3. Il trend delle vendite attraverso la rete delle librerie  
 
 
-Questa è la rappresentazione grafica dell'andamento delle vendite per settimana:  
+Questa è la rappresentazione grafica dell'andamento delle vendite per settimana dove si nota un picco stagionale in marzo e l'impatto positivo in maggio di due nuovi grossisti le cui fatture mancavano nei mesi precedenti:  
   
 ```{r echo = FALSE}
 df_librerie$Settimana <- as.Date(cut(df_librerie$data, breaks = "week", start.on.monday = TRUE))
@@ -115,7 +123,7 @@ plot(myts_forecast4, main= "Previsione vendite", ylab="Fatturato settimanale", x
 
 ```
   
-L'andamento medio delle vendite in libreria nel prossimo mese è quindi stimabile in circa 3300 euro a settimana. 
+L'andamento medio delle vendite in libreria nel prossimo mese è quindi stimabile in circa 3300 euro a settimana. Le fasce azzurro chiaro sono gli intervalli di confidenza all'80% e al 95%.
 
 #5. Conclusioni
 
@@ -123,8 +131,9 @@ E' assodato dalle testimonianze di clienti che abbiamo raccolto in diverse occas
 * Il libro consigliato (praticamente mai adottato in maniera esclusiva) da un docente o un formatore viene cercato in una libreria, a volte, se non trovato, viene sostituito da un testo concorrente. Altre volte  
 * La ricerca prosegue sulle principali librerie online: IBS, Libreria Universitaria (Webster), Amazon. Se non trovato o non sostituito il lettore cerca sul  
 * Sito web CLUEB  
-Pensiamo sia il momento per aprire nuovi canali di vendita, in particolare verso Amazon. sulla base delle analisi precedenti abbiamo determinato una stima media del fatturato settimanale che ci servirà come punto di riferimento per misurare l'impatto delle vendite di Amazon.  
-Se le ipotesi di comportamento dei nostri consumatori non dovessero essere confermate, l'aumento dello sconto richiesto da Amazon dovrebbe causare un calo del fatturato. Se invece si riscontrerà un aumento avremo conferma della giustezza delle ipotesi di comportamento del consumatore medio. Le vendite ad Amazon possono essere attivate e disattivate in pochi giorni e senza limiti di tempo.
+Pensiamo sia il momento di aprire nuovi canali di vendita, in particolare verso Amazon. sulla base delle analisi precedenti abbiamo determinato una stima media del fatturato settimanale che ci servirà come punto di riferimento per misurare l'impatto delle vendite di Amazon.  
+Se le ipotesi di comportamento dei nostri consumatori non dovessero essere confermate, l'aumento dello sconto richiesto da Amazon dovrebbe causare un calo del fatturato. Se invece si riscontrerà un aumento avremo conferma della giustezza delle ipotesi di comportamento del consumatore medio. Le vendite ad Amazon possono essere attivate e disattivate in pochi giorni e senza limiti di tempo.  
+In sintesi, aprendo le vendite ad Amazon, il fatturato dovrebbe salire a valori superiori alla stima effettuata sulla base degli altri clienti (ora fissata a 3300 euro alla settimana), stima destinata in ogni modo a salire, anche per altri effetti contingenti. Se non osserveremo questo dato interromperemo immediatamente le vendite ad Amazon.
 
 
 
